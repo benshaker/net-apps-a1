@@ -22,6 +22,12 @@ def main(args):
 	decodedObject = decode(image)
 	print (decodedObject)
 
+	cam = cv2.VideoCapture(0)
+
+	while(True):
+		ret, frame = cam.read()
+		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
 	'''
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -31,12 +37,7 @@ def main(args):
 			s.close()
 		print ("Unable to open the socket: " + str(message))
 		sys.exit(1)
-	
-	cam = picamera.PiCamera()
-	cam.start_preview()
-	cam.capture('test.jpg')
-	cam.stop_preview()
-	
+
 	# Messages should be sent in bytes b' '
 	s.send(b'Hello, world!')
 	data = s.recv(socket_size)
