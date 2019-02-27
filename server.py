@@ -15,8 +15,9 @@ parser.add_argument('--socket_size', '-z', help="the Socket Size, bytes per data
 
 args = parser.parse_args()
 
-if(len(sys.argv) != 2):
-    print("Too few arguments provided. See help via -h")
+
+if(len(sys.argv) != 5):
+    print("Incorrect number of arguments provided. See help via -h")
     exit()
 
 host = ''
