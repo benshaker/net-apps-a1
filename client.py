@@ -3,6 +3,10 @@
 import socket
 import argparse
 import sys
+import numpy as np
+import cv2
+import picamera
+import time
 
 def main(args):
 
@@ -10,7 +14,7 @@ def main(args):
 	server_port = args.sp
 	socket_size = args.z
 	s = None
-
+	'''
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((server_ip, server_port))
@@ -19,12 +23,18 @@ def main(args):
 			s.close()
 		print ("Unable to open the socket: " + str(message))
 		sys.exit(1)
-
+	'''
+	cam = picamera.PiCamera()
+	cam.start_preview()
+	cam.capture('test.jpg')
+	cam.stop_preview()
+	'''
+	# Messages should be sent in bytes b' '
 	s.send(b'Hello, world!')
 	data = s.recv(socket_size)
 	s.close()
-
-	print ('Received:', data)
+	'''
+	# print ('Received:', data)
 	print (args.sip)
 	print (args.sp)
 	print (args.z)
