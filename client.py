@@ -9,6 +9,7 @@ import picamera
 import time
 from pyzbar.pyzbar import decode
 from PIL import Image
+from ClientKeys import ibm_watson_api_key
 from watson_developer_cloud import TextToSpeechV1
 import os
 
@@ -39,7 +40,7 @@ def main(args):
 
 	# initializing text-to-speech
 	text_to_speech = TextToSpeechV1(
-		iam_apikey='8tY8kV6y_CR_m3Hp0-CgQdSKldyLKu0vzunGoIg37vEe',
+		iam_apikey=ibm_watson_api_key,
 		url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
 	)
 
@@ -53,7 +54,7 @@ def main(args):
 		# question = decode(gray)
 
 		# If there was no readable QR code, then retry
-		if len(question) != 1  :
+		if len(question) != 1:
 			continue
 		else:
 			with open('speech.wav', 'wb') as audio_file:
@@ -68,9 +69,6 @@ def main(args):
 			# s.send(question.data)
 
 		# answer = s.recv(socket_size)
-
-
-
 
 	# Messages should be sent in bytes b' '
 	s.close()
