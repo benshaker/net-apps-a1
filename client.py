@@ -66,7 +66,7 @@ def main(args):
 			s.close()
 
 		print("Unable to open the socket: " + str(message))
-		# sys.exit(1)
+		sys.exit(1)
 
 	# If there is no QR Code, then decode will output: []
 	# Else there will be data, type, etc
@@ -95,20 +95,7 @@ def main(args):
 		# question = decode(gray)
 
 		# If there was no readable QR code, then retry
-
-		if len(question) != 1:
-			continue
-		else:
-			with open('speech.wav', 'wb') as audio_file:
-				audio_file.write(
-					text_to_speech.synthesize(
-						question[0].data.decode("utf-8"),
-						'audio/wav',
-						'en-GB_KateVoice'
-					).get_result().content)
-			os.system("omxplayer speech.wav")
-			break
-			# s.send(question.data)
+		# s.send(question.data)
 
 		# answer = s.recv(socket_size)
 
