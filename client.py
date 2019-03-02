@@ -13,7 +13,9 @@ from ClientKeys import ibm_watson_api_key
 from watson_developer_cloud import TextToSpeechV1
 import os
 
+
 def main(args):
+
 	# Label the server connection specifications
 	server_ip = args.sip
 	server_port = args.sp
@@ -27,7 +29,7 @@ def main(args):
 	except socket.error as message:
 		if s:
 			s.close()
-		print ("Unable to open the socket: " + str(message))
+		print("Unable to open the socket: " + str(message))
 		# sys.exit(1)
 
 	# If there is no QR Code, then decode will output: []
@@ -60,7 +62,7 @@ def main(args):
 			with open('speech.wav', 'wb') as audio_file:
 				audio_file.write(
 					text_to_speech.synthesize(
-						(question[0].data).decode("utf-8"),
+						question[0].data.decode("utf-8"),
 						'audio/wav',
 						'en-GB_KateVoice'
 					).get_result().content)
@@ -73,6 +75,7 @@ def main(args):
 	# Messages should be sent in bytes b' '
 	s.close()
 
+
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
@@ -81,6 +84,6 @@ if __name__ == "__main__":
 	parser.add_argument('-z', help="Socket Size", type=int, default=0)
 
 	if len(sys.argv) != 7 and sys.argv[1] != "-h" and sys.argv[1] != "--help":
-		print("Error: Too few arguemnts")
+		print("Error: Too few arguments")
 	else: 
 		main(parser.parse_args(sys.argv[1:]))
