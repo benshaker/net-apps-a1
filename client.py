@@ -41,7 +41,7 @@ def unpack_answer(key, data):
 
 	f = Fernet(key)
 	decrypted_a = f.decrypt(encrypted_a)
-	print("[Checkpoint 09] Decrypt: Using key:", key, " | Plaintext:", decrypted_a)
+	print("[Checkpoint 08] Decrypt: Using key:", key, " | Plaintext:", decrypted_a)
 
 	decoded_a = decrypted_a.decode('utf-8')
 
@@ -120,7 +120,7 @@ def main(args):
 				).get_result().content)
 
 		os.system("omxplayer speech.wav > /dev/null")
-		print("[Checkpoint 10] Speaking answer:", answer)
+		print("[Checkpoint 09] Speaking answer:", answer)
 		break
 	# Messages should be sent in bytes b
 	s.close()
