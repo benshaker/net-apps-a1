@@ -25,38 +25,37 @@ def main(args):
 		if s:
 			s.close()
 		print ("Unable to open the socket: " + str(message))
-		sys.exit(1)
+		# sys.exit(1)
 
 	# If there is no QR Code, then decode will output: []
 	# Else there will be data, type, etc
-	image = cv2.imread('Hello_World_QR.png')
-
-	decodedObject = decode(image)
-	print (decodedObject)
-	'''
 	# Initialize the camera stream
-	cam = cv2.VideoCapture(0)
+	# cam = cv2.VideoCapture(0)
+	question = decode(cv2.imread('Hello_World_QR.png'))
+
+	# print (cam.isOpened())
 
 	# Continually scan for questions
-	while(True):
+	while True:
 		# Grab a frame from the stream
-		ret, frame = cam.read()
+		# ret, frame = cam.read()
 		# Convert the image to grayscale
-		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		# gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 		# Decode the QR code
-		question = decode(gray)
+		# question = decode(gray)
 
 		# If there was no readable QR code, then retry
-		if question == []:
+		if len(question) != 1  :
 			continue
 		else:
-			s.send(question.data)
+			print (question[0].data)
+			break
+			# s.send(question.data)
 
-		answer = s.recv(socket_size)
+		# answer = s.recv(socket_size)
 
 	# Messages should be sent in bytes b' '
 	s.close()
-	'''
 
 if __name__ == "__main__":
 
