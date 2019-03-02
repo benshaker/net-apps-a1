@@ -12,7 +12,8 @@ import argparse
 import requests
 import wolframalpha
 from ServerKeys import wolframaplha_api_key
-
+from watson_developer_cloud import TextToSpeechV1
+import os
 
 def main(args):
 
@@ -23,6 +24,12 @@ def main(args):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host,port))
     s.listen(backlog)
+
+    # initializing text-to-speech
+    text_to_speech = TextToSpeechV1(
+        iam_apikey='8tY8kV6y_CR_m3Hp0-CgQdSKldyLKu0vzunGoIg37vEe',
+        url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
+    )
 
     # establish our connection with wolfram|alpha
     wa_client = wolframalpha.Client(wolframaplha_api_key)
@@ -38,6 +45,16 @@ def main(args):
 
             # need to convert from bytes to string
             question_text = data.decode('utf-8')
+
+            # speak response
+            with open('speech.wav', 'wb') as audio_file:
+                audio_file.write(
+                    text_to_speech.synthesize(
+                        question_text,
+                        'audio/wav',
+                        'en-GB_KateVoice'
+                    ).get_result().content)
+            os.system("omxplayer speech.wav")
 
             # send question off to wolfram
             response = ask_wolfram(wa_client, question_text)
