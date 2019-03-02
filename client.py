@@ -59,7 +59,7 @@ def main(args):
 			with open('speech.wav', 'wb') as audio_file:
 				audio_file.write(
 					text_to_speech.synthesize(
-						question[0].data,
+						(question[0].data).decode("utf-8"),
 						'audio/wav',
 						'en-GB_KateVoice'
 					).get_result().content)
