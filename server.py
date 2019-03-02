@@ -10,7 +10,10 @@ import json
 import socket
 import argparse
 import requests
+import hashlib
+import pickle
 import wolframalpha
+from cryptography.fernet import Fernet
 from ServerKeys import wolframaplha_api_key
 from watson_developer_cloud import TextToSpeechV1
 import os
@@ -41,10 +44,9 @@ def main(args):
         while True:
             client, address = s.accept()
             data = client.recv(size)
-            print (b'Received question: ' + data)
+            # print (b'Received question: ' + data)
 
-            # need to convert from bytes to string
-            question_text = data.decode('utf-8')
+            good_question, question_text, key = unpack_question(data)
 
             # speak response
             with open('speech.wav', 'wb') as audio_file:
@@ -56,17 +58,48 @@ def main(args):
                     ).get_result().content)
             os.system("omxplayer speech.wav")
 
-            # send question off to wolfram
-            response = ask_wolfram(wa_client, question_text)
+            if good_question:
+                # send question off to wolfram
+                answer_text = ask_wolfram(wa_client, question_text)
 
-            # encode wolfram's response
-            response = response.encode('utf-8')
+                # encode wolfram's response
+                response = pack_answer(key, answer_text)
+
             if response:
                 # send the response to the client
                 client.send(response)
             client.close()
     except KeyboardInterrupt:
         pass
+
+def unpack_question(data):
+    unpicked_payload = pickle.loads(data)
+
+    # print(unpicked_payload)
+    key, encrypted_q, client_checksum = unpicked_payload
+    server_checksum = hashlib.md5(encrypted_q).hexdigest()
+    if(client_checksum != server_checksum):
+        error_text = "Error: did not receive your full question."
+        return False, error_text, None
+
+    f = Fernet(key)
+    decrypted_q = f.decrypt(encrypted_q)
+    decoded_q = decrypted_q.decode('utf-8')
+
+    return True, decoded_q, key
+
+def pack_answer(key, text):
+    f = Fernet(key)
+    encoded_q = text.encode('utf-8')
+    encrypted_q = f.encrypt(encoded_q)
+
+    checksum = hashlib.md5(encrypted_q).hexdigest()
+
+    unpickled_payload = (encrypted_q, checksum)
+
+    picked_payload = pickle.dumps(unpickled_payload)
+
+    return picked_payload
 
 
 def ask_wolfram(client, question):
