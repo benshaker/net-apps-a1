@@ -18,6 +18,7 @@ from ServerKeys import wolframaplha_api_key
 from watson_developer_cloud import TextToSpeechV1
 import os
 
+
 def main(args):
 
     host = ''
@@ -25,7 +26,7 @@ def main(args):
     backlog = 5
     size = args.socket_size
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind((host,port))
+    s.bind((host, port))
     s.listen(backlog)
 
     # initializing text-to-speech
@@ -72,13 +73,14 @@ def main(args):
     except KeyboardInterrupt:
         pass
 
+
 def unpack_question(data):
     unpicked_payload = pickle.loads(data)
 
     # print(unpicked_payload)
     key, encrypted_q, client_checksum = unpicked_payload
     server_checksum = hashlib.md5(encrypted_q).hexdigest()
-    if(client_checksum != server_checksum):
+    if client_checksum != server_checksum:
         error_text = "Error: did not receive your full question."
         return False, error_text, None
 
@@ -87,6 +89,7 @@ def unpack_question(data):
     decoded_q = decrypted_q.decode('utf-8')
 
     return True, decoded_q, key
+
 
 def pack_answer(key, text):
     f = Fernet(key)
@@ -130,9 +133,18 @@ def ask_wolfram(client, question):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Answers any incoming questions from the Client.')
-    parser.add_argument('--server_port', '-sp', help="the Server Port to be opened for connection", type= int, default= 50000)
-    parser.add_argument('--socket_size', '-z', help="the Socket Size, bytes per data packet", type= int, default= 1024)
+
+    parser.add_argument('--server_port',
+                        '-sp',
+                        help="the Server Port to be opened for connection",
+                        type=int,
+                        default=50000)
+
+    parser.add_argument('--socket_size',
+                        '-z',
+                        help="the Socket Size, bytes per data packet",
+                        type=int,
+                        default=1024)
 
     args = parser.parse_args()
-
     main(parser.parse_args(sys.argv[1:]))

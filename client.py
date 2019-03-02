@@ -18,31 +18,31 @@ from cryptography.fernet import Fernet
 
 
 def pack_question(key, text):
-    f = Fernet(key)
-    encoded_q = text.encode('utf-8')
-    encrypted_q = f.encrypt(encoded_q)
+	f = Fernet(key)
+	encoded_q = text.encode('utf-8')
+	encrypted_q = f.encrypt(encoded_q)
 
-    checksum = hashlib.md5(encrypted_q).hexdigest()
+	checksum = hashlib.md5(encrypted_q).hexdigest()
 
-    unpickled_payload = (key, encrypted_q, checksum)
+	unpickled_payload = (key, encrypted_q, checksum)
 
-    picked_payload = pickle.dumps(unpickled_payload)
+	picked_payload = pickle.dumps(unpickled_payload)
 
-    return picked_payload
+	return picked_payload
 
 
 def unpack_answer(key, data):
-    unpicked_payload = pickle.loads(data)
-    encrypted_a, server_checksum = unpicked_payload
-    client_checksum = hashlib.md5(encrypted_a).hexdigest()
-    if client_checksum != server_checksum:
-        return False, "Error: did not receive the full answer."
+	unpicked_payload = pickle.loads(data)
+	encrypted_a, server_checksum = unpicked_payload
+	client_checksum = hashlib.md5(encrypted_a).hexdigest()
+	if client_checksum != server_checksum:
+		return False, "Error: did not receive the full answer."
 
-    f = Fernet(key)
-    decrypted_a = f.decrypt(encrypted_a)
-    decoded_a = decrypted_a.decode('utf-8')
+	f = Fernet(key)
+	decrypted_a = f.decrypt(encrypted_a)
+	decoded_a = decrypted_a.decode('utf-8')
 
-    return decoded_a
+	return decoded_a
 
 
 def main(args):
