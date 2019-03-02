@@ -14,7 +14,7 @@ import hashlib
 import pickle
 import wolframalpha
 from cryptography.fernet import Fernet
-from ServerKeys import wolframaplha_api_key
+from ServerKeys import wolframaplha_api_key, ibm_watson_api_key
 from watson_developer_cloud import TextToSpeechV1
 import os
 
@@ -27,23 +27,27 @@ def main(args):
     size = args.socket_size
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.bind((host, port))
+    print("[Checkpoint 01] Created socket at", host, "on port", port)
+
     s.listen(backlog)
+    print("[Checkpoint 02] Listening for client connections")
 
     # initializing text-to-speech
     text_to_speech = TextToSpeechV1(
-        iam_apikey='8tY8kV6y_CR_m3Hp0-CgQdSKldyLKu0vzunGoIg37vEe',
+        iam_apikey=ibm_watson_api_key,
         url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
     )
+    print("[Checkpoint 03] Authenticated IBM Watson")
 
     # establish our connection with wolfram|alpha
     wa_client = wolframalpha.Client(wolframaplha_api_key)
+    print("[Checkpoint 04] Established connection with Wolfram | Alpha")
 
-    print("Server listening on port: ", port)
-    print("Server handling packet size: ", size)
     # print one line for each queryresult.pods[i].subpods.plaintext
     try:
         while True:
             client, address = s.accept()
+            print("[Checkpoint 05] Accepted client connection from", client, "on port", address)
             data = client.recv(size)
             # print (b'Received question: ' + data)
 
@@ -57,17 +61,20 @@ def main(args):
                         'audio/wav',
                         'en-GB_KateVoice'
                     ).get_result().content)
+            print("[Checkpoint 08] Speaking question:", question_text)
             os.system("omxplayer speech.wav")
 
             if good_question:
                 # send question off to wolfram
                 answer_text = ask_wolfram(wa_client, question_text)
+                print("[Checkpoint 10] Received answer from Wolfram | Alpha:", answer_text)
 
                 # encode wolfram's response
                 response = pack_answer(key, answer_text)
 
             if response:
                 # send the response to the client
+                print(b"[Checkpoint 13] Sending answer: " + response)
                 client.send(response)
             client.close()
     except KeyboardInterrupt:
@@ -76,6 +83,7 @@ def main(args):
 
 def unpack_question(data):
     unpicked_payload = pickle.loads(data)
+    print("[Checkpoint 06] Received data:", unpicked_payload)
 
     # print(unpicked_payload)
     key, encrypted_q, client_checksum = unpicked_payload
@@ -88,6 +96,7 @@ def unpack_question(data):
     decrypted_q = f.decrypt(encrypted_q)
     decoded_q = decrypted_q.decode('utf-8')
 
+    print("[Checkpoint 07] Decrypt: Key:", key, "| Plaintext:", decoded_q)
     return True, decoded_q, key
 
 
@@ -95,8 +104,10 @@ def pack_answer(key, text):
     f = Fernet(key)
     encoded_q = text.encode('utf-8')
     encrypted_q = f.encrypt(encoded_q)
+    print(b"[Checkpoint 11] Encrypt: Key: " + key.encode('utf-8') + b" | Ciphertext: " + encrypted_q)
 
     checksum = hashlib.md5(encrypted_q).hexdigest()
+    print("[Checkpoint 12] Generated MD5 Checksum:", checksum)
 
     unpickled_payload = (encrypted_q, checksum)
 
@@ -109,6 +120,7 @@ def ask_wolfram(client, question):
 
     # send the question to wolfram|alpha & await response
     response = client.query(question)
+    print("[Checkpoint 09] Sending question to Wolfram | Alpha:", question_text)
 
     # default reply assumes no answer was found
     the_answer = "Could not find an answer to your question."
