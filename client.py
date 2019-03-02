@@ -58,6 +58,8 @@ def main(args):
 	# Set up the server connection
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+		print("[Checkpoint 01] Connecting to", server_ip, "on port", server_port)
 		s.connect((server_ip, server_port))
 	except socket.error as message:
 		if s:

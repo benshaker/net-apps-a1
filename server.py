@@ -74,7 +74,7 @@ def main(args):
 
             if response:
                 # send the response to the client
-                print(b"[Checkpoint 13] Sending answer: " + response)
+                print("[Checkpoint 13] Sending answer:", response)
                 client.send(response)
             client.close()
     except KeyboardInterrupt:
@@ -104,7 +104,7 @@ def pack_answer(key, text):
     f = Fernet(key)
     encoded_q = text.encode('utf-8')
     encrypted_q = f.encrypt(encoded_q)
-    print(b"[Checkpoint 11] Encrypt: Key: " + key.encode('utf-8') + b" | Ciphertext: " + encrypted_q)
+    print("[Checkpoint 11] Encrypt: Key:", key.encode('utf-8'), " | Ciphertext:", encrypted_q)
 
     checksum = hashlib.md5(encrypted_q).hexdigest()
     print("[Checkpoint 12] Generated MD5 Checksum:", checksum)
