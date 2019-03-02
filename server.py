@@ -6,14 +6,15 @@ A simple echo server
 """
 
 import sys
+import json
 import socket
 import argparse
 import requests
+import wolframalpha
 from ServerKeys import wolframaplha_api_key
 
+
 def main(args):
-
-
 
     host = ''
     port = args.server_port
@@ -23,51 +24,56 @@ def main(args):
     s.bind((host,port))
     s.listen(backlog)
 
+    # establish our connection with wolfram|alpha
+    wa_client = wolframalpha.Client(wolframaplha_api_key)
+
     print("Server listening on port: ", port)
     print("Server handling packet size: ", size)
     # print one line for each queryresult.pods[i].subpods.plaintext
+    try:
+        while True:
+            client, address = s.accept()
+            data = client.recv(size)
+            print (b'Received question: ' + data)
 
-    while 1:
-        client, address = s.accept()
-        data = client.recv(size)
-        print (b'Received : ' + data)
-        response = ask_wolfram(data)
-        print("here is your response:\n")
-        print(response)
-        if data:
-            client.send(data)
-        client.close()
+            # need to convert from bytes to string
+            question_text = data.decode('utf-8')
 
-def ask_wolfram(the_question):
-    # TODO update decoding of the text that comes in
-    # i.e., .decode should not be necessary
-    input_with_spaces  = the_question.decode('utf-8')
-    input_no_spaces = input_with_spaces.replace(" ", "%20")
+            # send question off to wolfram
+            response = ask_wolfram(wa_client, question_text)
 
-    # TODO we may need to convert this into a promise
-    # otherwise the function won't wait for this request
-    # before it returns an empty answer
-    r = requests.get('http://api.wolframalpha.com/v2/query?'
-                        'input=' + input_no_spaces +
-                        '&appid=' + wolframaplha_api_key +
-                        '&output=json'
-                        '&format=plaintext')
-    json_res = r.json()
+            # encode wolfram's response
+            response = response.encode('utf-8')
+            if response:
+                # send the response to the client
+                client.send(response)
+            client.close()
+    except KeyboardInterrupt:
+        pass
 
-    query_res = json_res['queryresult']
 
+def ask_wolfram(client, question):
+
+    # send the question to wolfram|alpha & await response
+    response = client.query(question)
+
+    # default reply assumes no answer was found
     the_answer = "Could not find an answer to your question."
-    # print(res)
-    if(query_res['success'] == False):
+
+    # return default if wolfram leaves us high & dry
+    if '@success' in response and response['@success'] == 'false':
         return the_answer
 
-    pods = query_res['pods']
+    # search through all responses for primary answer
+    found_primary = False
+    for pod in response.pods:
+        for sub in pod.subpods:
+            if '@primary' in sub and sub['@primary'] == 'true':
+                the_answer = sub['plaintext']
+                found_primary = True
+                break
+        if found_primary: break
 
-    for i in range(len(pods)):
-        if 'primary' in pods[i] and pods[i]['primary'] == True:
-            subpods = pods[i]['subpods']
-            subpod = subpods[0]
-            the_answer = subpod['plaintext']
     return the_answer
 
 
@@ -79,7 +85,4 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if(len(sys.argv) != 5):
-        print("Error: Incorrect number of arguments provided. See help with --help")
-    else:
-        main(parser.parse_args(sys.argv[1:]))
+    main(parser.parse_args(sys.argv[1:]))
