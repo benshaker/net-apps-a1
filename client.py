@@ -21,6 +21,7 @@ def pack_question(key, text):
 	f = Fernet(key)
 	encoded_q = text.encode('utf-8')
 	encrypted_q = f.encrypt(encoded_q)
+	print("[Checkpoint 04] Encrypt: Generated key:", key, "| Ciphertext:", encrypted_q)
 
 	checksum = hashlib.md5(encrypted_q).hexdigest()
 
@@ -40,6 +41,8 @@ def unpack_answer(key, data):
 
 	f = Fernet(key)
 	decrypted_a = f.decrypt(encrypted_a)
+	print("[Checkpoint 08] Decrypt: Using key:", key, " | Plaintext:", decrypted_a)
+
 	decoded_a = decrypted_a.decode('utf-8')
 
 	return decoded_a
@@ -73,11 +76,14 @@ def main(args):
 	# Initialize the camera stream
 	# cam = cv2.VideoCapture(0)
 	# question = decode(cv2.imread('Hello_World_QR.png'))
+	print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
 	question = b'What time is it?'
+	print("[Checkpoint 03] New question:", question)
 
 	payload = pack_question(key, question.decode("utf-8"))
 	# print (cam.isOpened())
 
+	print("[Checkpoint 05] Initializing IBM Watson")
 	# initializing text-to-speech
 	text_to_speech = TextToSpeechV1(
 		iam_apikey=ibm_watson_api_key,
@@ -98,10 +104,12 @@ def main(args):
 		# s.send(question.data)
 
 		# answer = s.recv(socket_size)
-
+		print("[Checkpoint 06] Sending data:", payload)
 		s.send(payload)
 
 		data = s.recv(socket_size)
+		print("[Checkpoint 07] Received data:", data)
+
 		answer = unpack_answer(key, data)
 		with open('speech.wav', 'wb') as audio_file:
 			audio_file.write(
@@ -110,12 +118,14 @@ def main(args):
 					'audio/wav',
 					'en-GB_KateVoice'
 				).get_result().content)
-		os.system("omxplayer speech.wav")
+
+		os.system("omxplayer speech.wav > /dev/null")
+		print("[Checkpoint 09] Speaking answer:", answer)
 		break
 	# Messages should be sent in bytes b
 	s.close()
 
-
+ 
 if __name__ == "__main__":
 
 	parser = argparse.ArgumentParser()
