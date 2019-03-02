@@ -47,7 +47,7 @@ def main(args):
     try:
         while True:
             client, address = s.accept()
-            print("[Checkpoint 05] Accepted client connection from", client, "on port", address)
+            print("[Checkpoint 05] Accepted client connection from", client.getpeername()[0], "on port", address[1])
             data = client.recv(size)
             # print (b'Received question: ' + data)
 
