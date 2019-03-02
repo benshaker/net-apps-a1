@@ -9,6 +9,8 @@ import picamera
 import time
 from pyzbar.pyzbar import decode
 from PIL import Image
+from watson_developer_cloud import TextToSpeechV1
+import os
 
 def main(args):
 	# Label the server connection specifications
@@ -35,6 +37,12 @@ def main(args):
 
 	# print (cam.isOpened())
 
+	# initializing text-to-speech
+	text_to_speech = TextToSpeechV1(
+		iam_apikey='8tY8kV6y_CR_m3Hp0-CgQdSKldyLKu0vzunGoIg37vEe',
+		url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
+	)
+
 	# Continually scan for questions
 	while True:
 		# Grab a frame from the stream
@@ -48,11 +56,21 @@ def main(args):
 		if len(question) != 1  :
 			continue
 		else:
-			print (question[0].data)
+			with open('speech.wav', 'wb') as audio_file:
+				audio_file.write(
+					text_to_speech.synthesize(
+						question[0].data,
+						'audio/wav',
+						'en-GB_KateVoice'
+					).get_result().content)
+			os.system("omxplayer speech.wav")
 			break
 			# s.send(question.data)
 
 		# answer = s.recv(socket_size)
+
+
+
 
 	# Messages should be sent in bytes b' '
 	s.close()
