@@ -110,7 +110,7 @@ def main(args):
 					'audio/wav',
 					'en-GB_KateVoice'
 				).get_result().content)
-		os.system("omxplayer speech.wav")
+		os.system("omxplayer speech.wav > /dev/null")
 		break
 	# Messages should be sent in bytes b
 	s.close()
