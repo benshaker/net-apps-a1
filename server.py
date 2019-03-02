@@ -47,7 +47,7 @@ def main(args):
     try:
         while True:
             client, address = s.accept()
-            print("[Checkpoint 05] Accepted client connection from", client, "on port", address)
+            print("[Checkpoint 05] Accepted client connection from", client.raddr[0], "on port", address[1])
             data = client.recv(size)
             # print (b'Received question: ' + data)
 
@@ -120,7 +120,7 @@ def ask_wolfram(client, question):
 
     # send the question to wolfram|alpha & await response
     response = client.query(question)
-    print("[Checkpoint 09] Sending question to Wolfram | Alpha:", question_text)
+    print("[Checkpoint 09] Sending question to Wolfram | Alpha:", question)
 
     # default reply assumes no answer was found
     the_answer = "Could not find an answer to your question."
