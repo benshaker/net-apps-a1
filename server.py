@@ -47,7 +47,7 @@ def main(args):
     try:
         while True:
             client, address = s.accept()
-            print("[Checkpoint 05] Accepted client connection from", client.raddr[0], "on port", address[1])
+            print("[Checkpoint 05] Accepted client connection from", client, "on port", address)
             data = client.recv(size)
             # print (b'Received question: ' + data)
 
@@ -62,7 +62,7 @@ def main(args):
                         'en-GB_KateVoice'
                     ).get_result().content)
             print("[Checkpoint 08] Speaking question:", question_text)
-            os.system("omxplayer speech.wav")
+            os.system("omxplayer speech.wav > /dev/null")
 
             if good_question:
                 # send question off to wolfram
@@ -104,7 +104,7 @@ def pack_answer(key, text):
     f = Fernet(key)
     encoded_q = text.encode('utf-8')
     encrypted_q = f.encrypt(encoded_q)
-    print("[Checkpoint 11] Encrypt: Key:", key.encode('utf-8'), " | Ciphertext:", encrypted_q)
+    print("[Checkpoint 11] Encrypt: Key:", key, " | Ciphertext:", encrypted_q)
 
     checksum = hashlib.md5(encrypted_q).hexdigest()
     print("[Checkpoint 12] Generated MD5 Checksum:", checksum)
