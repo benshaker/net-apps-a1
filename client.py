@@ -11,24 +11,13 @@ from pyzbar.pyzbar import decode
 from PIL import Image
 
 def main(args):
-
+	# Label the server connection specifications
 	server_ip = args.sip
 	server_port = args.sp
 	socket_size = args.z
 	s = None
 
-	image = cv2.imread('Hello_World_QR.png')
-
-	decodedObject = decode(image)
-	print (decodedObject)
-
-	cam = cv2.VideoCapture(0)
-
-	while(True):
-		ret, frame = cam.read()
-		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
-	'''
+	# Set up the server connection
 	try:
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		s.connect((server_ip, server_port))
@@ -38,9 +27,34 @@ def main(args):
 		print ("Unable to open the socket: " + str(message))
 		sys.exit(1)
 
+	# If there is no QR Code, then decode will output: []
+	# Else there will be data, type, etc
+	image = cv2.imread('Hello_World_QR.png')
+
+	decodedObject = decode(image)
+	print (decodedObject)
+	'''
+	# Initialize the camera stream
+	cam = cv2.VideoCapture(0)
+
+	# Continually scan for questions
+	while(True):
+		# Grab a frame from the stream
+		ret, frame = cam.read()
+		# Convert the image to grayscale
+		gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+		# Decode the QR code
+		question = decode(gray)
+
+		# If there was no readable QR code, then retry
+		if question == []:
+			continue
+		else:
+			s.send(question.data)
+
+		answer = s.recv(socket_size)
+
 	# Messages should be sent in bytes b' '
-	s.send(b'Hello, world!')
-	data = s.recv(socket_size)
 	s.close()
 	'''
 
