@@ -47,12 +47,12 @@ def main(args):
 
     # opening our port for communications
     s.listen(backlog)
-    print("[Checkpoint 02] Listening for client connections")
 
     try:
         # continually search for incoming connections
         while True:
             # await connection from client
+            print("[Checkpoint 02] Listening for client connections")
             client, address = s.accept()
 
             ip, port = address
@@ -72,8 +72,6 @@ def main(args):
                 answer_text = "Could not decipher your question. Please try again."
             else:
                 # send question to wolfram
-                print("[Checkpoint 07] Sending question to Wolframalpha:",
-                    question_text)
                 answer_text = ask_wolfram(wolfram_client, question_text)
                 print("[Checkpoint 08] Received answer from Wolframalpha:",
                     answer_text)
@@ -158,8 +156,8 @@ def speak_aloud(client, text):
 def ask_wolfram(client, question):
 
     # send the question to wolfram|alpha & await response
+    print("[Checkpoint 07] Sending question to Wolframalpha:", question)
     response = client.query(question)
-    print("[Checkpoint 09] Sending question to Wolfram | Alpha:", question)
 
     # default reply assumes no answer was found
     the_answer = "Could not find an answer to your question."
