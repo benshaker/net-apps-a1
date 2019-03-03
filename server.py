@@ -45,7 +45,7 @@ def main(args):
     host_ip = socket.gethostbyname(socket.gethostname())
     print("[Checkpoint 01] Created socket at", host_ip, "on port", port)
 
-    # openning our port for communications
+    # opening our port for communications
     s.listen(backlog)
     print("[Checkpoint 02] Listening for client connections")
 
@@ -172,7 +172,7 @@ def ask_wolfram(client, question):
     found_primary = False
     for pod in response.pods:
         for sub in pod.subpods:
-            if '@primary' in sub and sub['@primary'] == 'true':
+            if '@primary' in pod and pod['@primary'] == 'true':
                 the_answer = sub['plaintext']
                 found_primary = True
                 # exit once we've found the primary answer
