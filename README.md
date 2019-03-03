@@ -53,8 +53,11 @@ where 127.0.0.1 should be replaced with the local IP address of the Server with 
 
 These developments are intended for the Raspberry Pi 3 B+.
 
-* [Python3](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-
+* [Raspberry Pi](https://www.raspberrypi.org/) - The hardware used
+* [Python3](http://www.dropwizard.io/1.0.2/docs/) - The language used
+* [PyPip](https://pypi.org/project/pip/) - The package manager used
+* [PyCharm](https://www.jetbrains.com/pycharm/) - One of the IDEs used
+* [Sublime](https://www.sublimetext.com/) - One text editors used
 
 ## Contributing
 
@@ -72,5 +75,6 @@ No license for this particular project, only those aggregated licenses of the so
 
 ## Acknowledgments
 
+* Thank you [RPi IP auto-emailer-on-boot](https://elinux.org/RPi_Email_IP_On_Boot_Debian)
 * Thank you to all the folks at StackOverflow
 * Thank you to our helpful and understanding TA Mihir Kulkarni
