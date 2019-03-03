@@ -16,124 +16,163 @@ import pickle
 import hashlib
 from cryptography.fernet import Fernet
 
-
-def pack_question(key, text):
-	f = Fernet(key)
-	encoded_q = text.encode('utf-8')
-	encrypted_q = f.encrypt(encoded_q)
-	print("[Checkpoint 04] Encrypt: Generated key:", key, "| Ciphertext:", encrypted_q)
-
-	checksum = hashlib.md5(encrypted_q).hexdigest()
-
-	unpickled_payload = (key, encrypted_q, checksum)
-
-	picked_payload = pickle.dumps(unpickled_payload)
-
-	return picked_payload
-
-
-def unpack_answer(key, data):
-	unpicked_payload = pickle.loads(data)
-	encrypted_a, server_checksum = unpicked_payload
-	client_checksum = hashlib.md5(encrypted_a).hexdigest()
-	if client_checksum != server_checksum:
-		return False, "Error: did not receive the full answer."
-
-	f = Fernet(key)
-	decrypted_a = f.decrypt(encrypted_a)
-	print("[Checkpoint 08] Decrypt: Using key:", key, " | Plaintext:", decrypted_a)
-
-	decoded_a = decrypted_a.decode('utf-8')
-
-	return decoded_a
-
-
 def main(args):
 
-	# Label the server connection specifications
-	server_ip = args.sip
-	server_port = args.sp
-	socket_size = args.z
-	s = None
+    # Label the server connection specifications
+    server_ip = args.server_ip
+    server_port = args.server_port
+    socket_size = args.socket_size
+    s = None
 
-	key = Fernet.generate_key()
+    # Attempt a connection to the server
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-	# Set up the server connection
-	try:
-		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("[Checkpoint 01] Connecting to", server_ip, "on port", server_port)
+        s.connect((server_ip, server_port))
+    except socket.error as message:
+        if s: s.close()
+        print("Unable to open the socket: " + str(message))
+        sys.exit(1)
 
-		print("[Checkpoint 01] Connecting to", server_ip, "on port", server_port)
-		s.connect((server_ip, server_port))
-	except socket.error as message:
-		if s:
-			s.close()
+    # initializing IBM Watson Text-to-Speech module
+    watson_client = TextToSpeechV1(
+        iam_apikey=ibm_watson_api_key,
+        url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
+    )
 
-		print("Unable to open the socket: " + str(message))
-		sys.exit(1)
+    # prepare a key for msg encryption / decryption
+    key = Fernet.generate_key()
 
-	# If there is no QR Code, then decode will output: []
-	# Else there will be data, type, etc
-	# Initialize the camera stream
-	# cam = cv2.VideoCapture(0)
-	# question = decode(cv2.imread('Hello_World_QR.png'))
-	print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
-	question = b'What time is it?'
-	print("[Checkpoint 03] New question:", question)
+    # If there is no QR Code, then decode will output: []
+    # Else there will be data, type, etc
+    # Initialize the camera stream
+    # cam = cv2.VideoCapture(0)
+    # question = decode(cv2.imread('Hello_World_QR.png'))
+    print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
 
-	payload = pack_question(key, question.decode("utf-8"))
-	# print (cam.isOpened())
+    question = b'What time is it?'
+    print("[Checkpoint 03] New question:", question)
 
-	print("[Checkpoint 05] Initializing IBM Watson")
-	# initializing text-to-speech
-	text_to_speech = TextToSpeechV1(
-		iam_apikey=ibm_watson_api_key,
-		url='https://gateway-wdc.watsonplatform.net/text-to-speech/api'
-	)
+    # pack initial msg for Server
+    payload = pack_question(key, question.decode("utf-8"))
+    # print (cam.isOpened())
 
-	# Continually scan for questions
-	while True:
+    # Continually scan for questions
+    while True:
 
-		# Grab a frame from the stream
-		# ret, frame = cam.read()
-		# Convert the image to grayscale
-		# gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-		# Decode the QR code
-		# question = decode(gray)
+        # Grab a frame from the stream
+        # ret, frame = cam.read()
+        # Convert the image to grayscale
+        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        # Decode the QR code
+        # question = decode(gray)
 
-		# If there was no readable QR code, then retry
-		# s.send(question.data)
+        # If there was no readable QR code, then retry
+        # s.send(question.data)
 
-		# answer = s.recv(socket_size)
-		print("[Checkpoint 06] Sending data:", payload)
-		s.send(payload)
+        # send data to Server
+        print("[Checkpoint 05] Sending data:", payload)
+        s.send(payload)
 
-		data = s.recv(socket_size)
-		print("[Checkpoint 07] Received data:", data)
+        # await data from Server
+        data = s.recv(socket_size)
+        print("[Checkpoint 06] Received data:", data)
 
-		answer = unpack_answer(key, data)
-		with open('speech.wav', 'wb') as audio_file:
-			audio_file.write(
-				text_to_speech.synthesize(
-					answer,
-					'audio/wav',
-					'en-GB_KateVoice'
-				).get_result().content)
+        # unpack data from Server
+        answer_text = unpack_answer(key, data)
 
-		os.system("omxplayer speech.wav > /dev/null")
-		print("[Checkpoint 09] Speaking answer:", answer)
-		break
-	# Messages should be sent in bytes b
-	s.close()
+        # speak question text aloud
+        speak_aloud(watson_client, answer_text)
+        break
 
- 
+    # close this socket connection
+    s.close()
+
+def pack_question(key, text):
+
+    # encode the text
+    encoded_q = text.encode('utf-8')
+
+    # encrypt the question with the new key
+    encrypted_q = Fernet(key).encrypt(encoded_q)
+    print("[Checkpoint 04] Encrypt: Generated key:", key, "| Ciphertext:", encrypted_q)
+
+    # generate a checksum for the Server's reference
+    checksum = hashlib.md5(encrypted_q).hexdigest()
+
+    # prepare the payload for pickling
+    unpickled_payload = (key, encrypted_q, checksum)
+
+    # pickle the payload
+    picked_payload = pickle.dumps(unpickled_payload)
+
+    return picked_payload
+
+# this function unpickles, unencrypts, and deciphers the Server's answer
+# returns decoded_a
+# @decoded_a: string type containing error or answer text
+def unpack_answer(key, data):
+    # unpickle the payload
+    unpicked_payload = pickle.loads(data)
+
+    # unpackage the unpickled payload
+    encrypted_a, server_checksum = unpicked_payload
+
+    # compare checksums: my hash should equal the one sent
+    client_checksum = hashlib.md5(encrypted_a).hexdigest()
+    if client_checksum != server_checksum:
+        return False, "Error: did not receive the full answer."
+
+    # decrypt the answer with the original key
+    decrypted_a = Fernet(key).decrypt(encrypted_a)
+    print("[Checkpoint 07] Decrypt: Using key:", key, " | Plaintext:", decrypted_a)
+
+    # decode the text
+    decoded_a = decrypted_a.decode('utf-8')
+
+    return decoded_a
+
+# this function sends plain text to Watson for conversion to soundwaves
+def speak_aloud(client, text):
+    # create an audio file from the text
+    with open('speech.wav', 'wb') as audio_file:
+        audio_file.write(
+            client.synthesize(
+                text,
+                'audio/wav',
+                'en-GB_KateVoice'
+            ).get_result().content)
+
+    print("[Checkpoint 08] Speaking answer:", text)
+    # play that audio file like any other
+    os.system("omxplayer speech.wav > /dev/null")
+    return None
+
 if __name__ == "__main__":
 
-	parser = argparse.ArgumentParser()
-	parser.add_argument('-sip', help="Server IP Address", type=str)
-	parser.add_argument('-sp', help="Server Port", type=int, default=0)
-	parser.add_argument('-z', help="Socket Size", type=int, default=0)
+    # initialize management of command line parameters
+    parser = argparse.ArgumentParser(description='Sends questions to the Server with hopes of hearing an answer.')
 
-	if len(sys.argv) != 7 and sys.argv[1] != "-h" and sys.argv[1] != "--help":
-		print("Error: Too few arguments")
-	else: 
-		main(parser.parse_args(sys.argv[1:]))
+    parser.add_argument('--server_ip',
+                        '-sip',
+                        help="The IP address of the Server to receive the encrypted question",
+                        type=str)
+
+    parser.add_argument('--server_port',
+                        '-sp',
+                        help="The Server Port this Client will try connecting to",
+                        type=int,
+                        default=50000)
+
+    parser.add_argument('--socket_size',
+                        '-z',
+                        help="the Socket Size, bytes per data packet",
+                        type=int,
+                        default=1024)
+
+    # require the user input all Client.py parameters
+    if len(sys.argv) != 7:
+        print("Error: Too few arguments provided. Please see --help for more information.")
+    else:
+        main(parser.parse_args(sys.argv[1:]))
