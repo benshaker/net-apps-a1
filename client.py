@@ -22,7 +22,13 @@ def main(args):
     server_ip = args.server_ip
     server_port = args.server_port
     socket_size = args.socket_size
+    cam = cv2.VideoCapture(0)
     s = None
+
+    # Check to see if the webcam is properly set up
+    if not cam.isOpened():
+        print("Unable to open the webcam")
+        sys.exit(1)
 
     # Attempt a connection to the server
     try:
@@ -46,30 +52,30 @@ def main(args):
 
     # If there is no QR Code, then decode will output: []
     # Else there will be data, type, etc
-    # Initialize the camera stream
-    # cam = cv2.VideoCapture(0)
-    # question = decode(cv2.imread('Hello_World_QR.png'))
-    print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
-
-    question = b'What time is it?'
-    print("[Checkpoint 03] New question:", question)
-
-    # pack initial msg for Server
-    payload = pack_question(key, question.decode("utf-8"))
-    # print (cam.isOpened())
 
     # Continually scan for questions
+    print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions") 
     while True:
 
         # Grab a frame from the stream
-        # ret, frame = cam.read()
+        ret, frame = cam.read()
         # Convert the image to grayscale
-        # gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         # Decode the QR code
-        # question = decode(gray)
+        qr = decode(gray)
+
+        if len(qr) != 1:
+            continue
+
+	# The Question has been decoded from qr -> bytestring -> string
+        question = (qr[0].data).decode("utf-8")
+
+        print("[Checkpoint 03] New question:", question)
+
+        # pack initial msg for Server
+        payload = pack_question(key, question)
 
         # If there was no readable QR code, then retry
-        # s.send(question.data)
 
         # send data to Server
         print("[Checkpoint 05] Sending data:", payload)
@@ -84,10 +90,18 @@ def main(args):
 
         # speak question text aloud
         speak_aloud(watson_client, answer_text)
-        break
+
+        # Choose whether to ask another question
+        cont = input("Do you wish to continue: [y/n]")
+
+        if cont == 'y':
+            continue
+        if cont == 'n':
+            break
 
     # close this socket connection
     s.close()
+    cam.release()
 
 def pack_question(key, text):
 
