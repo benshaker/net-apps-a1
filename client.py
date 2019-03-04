@@ -26,13 +26,7 @@ def main(args):
     server_ip = args.server_ip
     server_port = args.server_port
     socket_size = args.socket_size
-    cam = cv2.VideoCapture(0)
     s = None
-
-    # Check to see if the webcam is properly set up
-    if not cam.isOpened():
-        print("Unable to open the webcam")
-        sys.exit(1)
 
     # Attempt a connection to the server
     try:
@@ -53,13 +47,15 @@ def main(args):
 
     # prepare a key for msg encryption / decryption
     key = Fernet.generate_key()
+    cam = cv2.VideoCapture(0)
 
     # If there is no QR Code, then decode will output: []
     # Else there will be data, type, etc
-
     # Continually scan for questions
     print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
     while True:
+        if not cam.isOpened():
+            cam = cv2.VideoCapture(0)
 
         # Grab a frame from the stream
         ret, frame = cam.read()
@@ -71,6 +67,7 @@ def main(args):
         if len(qr) != 1:
             continue
 
+        cam.release()
         # The Question has been decoded from qr -> bytestring -> string
         question = (qr[0].data).decode("utf-8")
 
