@@ -49,18 +49,21 @@ def main(args):
     s.listen(backlog)
 
     try:
-        # continually search for incoming connections
+        # await connection from client
+        print("[Checkpoint 02] Listening for client connections")
+        client, address = s.accept()
+        
+        ip, port = address
+        print("[Checkpoint 03] Accepted client connection from ", ip,
+              " on port ", port)
         while True:
-            # await connection from client
-            print("[Checkpoint 02] Listening for client connections")
-            client, address = s.accept()
-
-            ip, port = address
-            print("[Checkpoint 03] Accepted client connection from ", ip,
-                  " on port ", port)
-
+            data = response = None
+            good_question = question_text = key = None
             # await data from client
             data = client.recv(size)
+            
+            if data == None:
+                continue
 
             # unpack data from Client
             good_question, question_text, key = unpack_question(data)
@@ -85,7 +88,7 @@ def main(args):
                 client.send(response)
 
             # end this connection with the Client
-            client.close()
+            # client.close()
     except KeyboardInterrupt:
         # exit gracefully on CTRL-C
         pass
