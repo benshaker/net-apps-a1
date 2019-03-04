@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
 
+"""
+Here we define the Client. The Client is responsible for asking questions of the Server. The questions sent must first be encrpyted before being sent off, and an answer must be decrypted before it can be spoken aloud.
+"""
+
 import socket
 import argparse
 import sys
@@ -54,7 +58,7 @@ def main(args):
     # Else there will be data, type, etc
 
     # Continually scan for questions
-    print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions") 
+    print("[Checkpoint 02] Listening for QR codes from RPi Camera that contains questions")
     while True:
 
         # Grab a frame from the stream
@@ -67,7 +71,7 @@ def main(args):
         if len(qr) != 1:
             continue
 
-	# The Question has been decoded from qr -> bytestring -> string
+        # The Question has been decoded from qr -> bytestring -> string
         question = (qr[0].data).decode("utf-8")
 
         print("[Checkpoint 03] New question:", question)

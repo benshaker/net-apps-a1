@@ -45,14 +45,14 @@ def main(args):
     host_ip = socket.gethostbyname(socket.gethostname())
     print("[Checkpoint 01] Created socket at", host_ip, "on port", port)
 
-    # openning our port for communications
+    # opening our port for communications
     s.listen(backlog)
-    print("[Checkpoint 02] Listening for client connections")
 
     try:
         # continually search for incoming connections
         while True:
             # await connection from client
+            print("[Checkpoint 02] Listening for client connections")
             client, address = s.accept()
 
             ip, port = address
@@ -72,8 +72,6 @@ def main(args):
                 answer_text = "Could not decipher your question. Please try again."
             else:
                 # send question to wolfram
-                print("[Checkpoint 07] Sending question to Wolframalpha:",
-                    question_text)
                 answer_text = ask_wolfram(wolfram_client, question_text)
                 print("[Checkpoint 08] Received answer from Wolframalpha:",
                     answer_text)
@@ -158,8 +156,8 @@ def speak_aloud(client, text):
 def ask_wolfram(client, question):
 
     # send the question to wolfram|alpha & await response
+    print("[Checkpoint 07] Sending question to Wolframalpha:", question)
     response = client.query(question)
-    print("[Checkpoint 09] Sending question to Wolfram | Alpha:", question)
 
     # default reply assumes no answer was found
     the_answer = "Could not find an answer to your question."
@@ -172,7 +170,7 @@ def ask_wolfram(client, question):
     found_primary = False
     for pod in response.pods:
         for sub in pod.subpods:
-            if '@primary' in sub and sub['@primary'] == 'true':
+            if '@primary' in pod and pod['@primary'] == 'true':
                 the_answer = sub['plaintext']
                 found_primary = True
                 # exit once we've found the primary answer
