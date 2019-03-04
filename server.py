@@ -42,7 +42,7 @@ def main(args):
     wolfram_client = wolframalpha.Client(wolframaplha_api_key)
 
     # determine current Pi's IP
-    host_ip = socket.gethostbyname(socket.gethostname())
+    host_ip = get_ip_address()
     print("[Checkpoint 01] Created socket at", host_ip, "on port", port)
 
     # opening our port for communications
@@ -182,6 +182,13 @@ def ask_wolfram(client, question):
 
     return the_answer
 
+def get_ip_address():
+    ip_address = '';
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8",80))
+    ip_address = s.getsockname()[0]
+    s.close()
+    return ip_address
 
 if __name__ == "__main__":
     # initialize management of command line parameters
