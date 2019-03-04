@@ -187,6 +187,6 @@ if __name__ == "__main__":
 
     # require the user input all Client.py parameters
     if len(sys.argv) != 7:
-        print("Error: Too few arguments provided. Please see --help for more information.")
+        print("Error: Too few or many arguments provided. Please see --help for more information.")
     else:
         main(parser.parse_args(sys.argv[1:]))
